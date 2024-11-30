@@ -1,6 +1,7 @@
 ﻿using LibraryManagementSystemWithJwtToken.Models;
 using LibraryManagementSystemWithJwtToken.Service;
 using LibraryManagementSystemWithJwtToken.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagementSystemWithJwtToken.Controllers
@@ -15,13 +16,25 @@ namespace LibraryManagementSystemWithJwtToken.Controllers
         {
             _bookService = bookService;
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
-        public IActionResult GetAllBooks()
+        public IActionResult GetAllBooks(int page = 1, int pageSize = 10)
         {
-            return Ok(_bookService.GetAllBooks());
-        }
+            if (page <= 0 || pageSize <= 0)
+            {
+                return BadRequest("Sayfa ve sayfa boyutu pozitif bir değer olmalıdır.");
+            }
 
+            var pagedResult = _bookService.GetAllBooks(page, pageSize);
+
+            if (!pagedResult.Items.Any())
+            {
+                return NotFound("Bu sayfa için veri bulunamadı.");
+            }
+
+            return Ok(pagedResult);
+        }
+        [Authorize(Roles = "User")]
         [HttpGet("{title}")]
         public IActionResult getBookByTitle(string title)
         {
@@ -29,20 +42,21 @@ namespace LibraryManagementSystemWithJwtToken.Controllers
             if (book == null) return NotFound();
             return Ok(book);
         }
-
+        [Authorize(Roles = "User")]
         [HttpGet("author/{authorName}")]
         public IActionResult getBooksByAuthor(string authorName)
         {
             return Ok(_bookService.GetBooksByAuthorName(authorName));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
-        public IActionResult AddBook([FromBody] Book book)
+        public async Task<IActionResult> addBookAsync([FromBody] Book book)
         {
             try
             {
-                var addedBook = _bookService.addBook(book); // Servis aracılığıyla kitap eklenir
-                return CreatedAtAction(nameof(getBookByTitle), new { title = addedBook.Title }, addedBook);
+                await _bookService.AddBookAsync(book); // Asenkron metod çağrısı
+                return CreatedAtAction(nameof(GetAllBooks), new { id = book.Id }, book);
             }
             catch (ArgumentException ex)
             {
