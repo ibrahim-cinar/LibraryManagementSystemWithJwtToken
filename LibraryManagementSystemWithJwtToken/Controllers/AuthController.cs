@@ -1,13 +1,14 @@
 ﻿using LibraryManagementSystemWithJwtToken.Models;
 using LibraryManagementSystemWithJwtToken.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Diagnostics;
 
 namespace LibraryManagementSystemWithJwtToken.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : Controller
     {
         private readonly IAuthService _authService;
 
@@ -15,6 +16,26 @@ namespace LibraryManagementSystemWithJwtToken.Controllers
         {
             _authService = authService;
         }
+
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] Login model)
+        {
+            var token = await _authService.LoginUserAsync(model);
+            if (token != null)
+            {
+                return Ok(new { Token = token });
+            }
+            return Unauthorized();
+        }
+ 
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] Register model)
@@ -27,16 +48,7 @@ namespace LibraryManagementSystemWithJwtToken.Controllers
             return BadRequest(result.Errors);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Login model)
-        {
-            var token = await _authService.LoginUserAsync(model);
-            if (token != null)
-            {
-                return Ok(new { Token = token });
-            }
-            return Unauthorized();
-        }
+
 
         [HttpPost("add-role")]
         public async Task<IActionResult> AddRole([FromBody] string role)
@@ -73,5 +85,6 @@ namespace LibraryManagementSystemWithJwtToken.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
     }
 }

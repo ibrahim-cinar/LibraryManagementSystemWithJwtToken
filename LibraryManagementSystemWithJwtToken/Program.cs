@@ -14,7 +14,7 @@ using LibraryManagementSystemWithJwtToken.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -22,7 +22,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(
     options =>
@@ -60,19 +60,10 @@ builder.Services.AddAuthorization(Options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-/*if (!app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}*/
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
 
@@ -85,8 +76,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-/*app.MapControllerRoute(
+app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");*/
-
+    pattern: "{controller=Home}/{action=LoginPage}/{id?}");
 app.Run();
